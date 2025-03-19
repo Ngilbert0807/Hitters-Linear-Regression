@@ -1,0 +1,125 @@
+---
+title: "Gilbert_Nathaniel_329_Final_Project"
+output: pdf_document
+date: "2025-03-17"
+---
+
+```{r include=FALSE}
+library(tidyverse)
+library(ISLR)
+```
+
+In this report we will be analyzing the hitters dataset from the ISLR library, we will be
+attempting to create a linear regression model in order to predict a hitters salary.
+
+```{r}
+head(Hitters)
+```
+The dataset features a number of baseball statistics, both for the previous year (1986) and career for a number of baseball playters, it also tells the salary for each player.
+
+Nearly every variable is a discretre numerical varible, with the exception of league, division, and NewLeague which are categorival variables. Aditionally salary is a continuous numerical variable.
+```{r results=FALSE}
+is.na(Hitters)
+```
+The dataset does have null valies, all in the salary column. As that is our response variable we must remove any columns with a null value
+```{r}
+hitters= na.omit(Hitters)
+
+str(hitters)
+```
+All of the variables are stored as the correct type.
+
+Next we will do some numerical analysis on the data
+
+```{r}
+summary(hitters)
+```
+The summary shows us there is a very wide range for salaries, aditionnaly it shows there are roughly equal amount of players in each league and division.
+```{r}
+numeric_hitters <-hitters[, sapply(hitters, is.numeric)] 
+cor(numeric_hitters)
+```
+
+The correlation matrix shows how well all of the numeric variables are correlated. At Bats is very correlated with many offensive totals. Aditionally it seems Salary does not have a super strong correlation with any individual variable.
+Next we will do some visual analysis
+
+```{r}
+hist(hitters$Salary, main="Distribution of Player Salaries", xlab="Salary", col="blue")
+```
+This graph shows that player salaries are heavily skewed right, and a majority of players had a salary under 500,000 dollars.
+
+```{r}
+boxplot(hitters$Salary, main="Boxplot of Player Salaries", ylab="Salary", col="blue")
+```
+
+In fact, using a boxplot we can see there are an unually large  number of outliers on the high end of salaries. We can also see the average is around 500,000 a year.
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(hitters$CRuns, hitters$Salary, main="Salary vs Career Runs", xlab="Career Runs", ylab="Salary")
+plot(hitters$CHits, hitters$Salary, main="Salary vs Career Hits", xlab="Career Hits", ylab="Salary")
+plot(hitters$CRBI, hitters$Salary, main="Salary vs Career RBI", xlab="Career RBI", ylab="Salary")
+plot(hitters$CAtBat, hitters$Salary, main="Salary vs Career At Bats", xlab="Career At Bats", ylab="Salary")
+```
+Finally, we plot the salary in comparison to the variables that it had the 4 strongest correlation with. All of these graphs look very similar and clearly show a moderate positive correlation between the variable and salary.
+
+Next, we will be training a regression model in order to predict a hitters salary.
+
+```{r}
+model <- lm(Salary~.,data=hitters)
+summary(model)
+```
+AtBat, Hits, Walks, CWalks, Division, and PutOuts are all significant at a 95% confidence level so these are the variables we will be using.
+```{r}
+model <-lm(Salary~AtBat+Hits+Walks+CWalks+Division+PutOuts, data=hitters)
+```
+Next, we need to check the five assumptuions of linearity, we will do that using the diagnostic plots from our model. We will start with normality.
+```{r}
+plot(model, which=2)
+```
+From the Q-Q Residual plot we can see that the normality assumption of our model is violated, we can fix this by modifying the response variable.
+```{r}
+model <-lm(sqrt(Salary)~AtBat+Hits+Walks+CWalks+Division+PutOuts, data=hitters)
+plot(model, which=2)
+```
+By taking the sqare root of Salary we fix the normality of our data, next we will see if the linearity of the data holds.
+```{r}
+plot(model, which=1)
+```
+There does not seem to be a pattern in the residuals and the red line stays mostly flat through zero so our data does not violate the linearity assumption. Next we will check the data for outliers.
+
+```{r}
+plot(model, which=5)
+```
+Mike Schmidt is a massive outlier (as his career stats in the dataset are incorrect), Steve Sax and Darrell Evans are also big outliers and all three should be removed.
+```{r}
+Schmidt <- which(hitters$AtBat == 20 & hitters$CRBI == 7)
+Sax <-which(hitters$AtBat==633)
+Evans <-which(hitters$AtBat==507)
+remove <-c(Schmidt, Sax, Evans)
+```
+Since the dataset does not have row indices and uses player names(which are not numeric and therefore not compatable with slice) I found the index using the which function of the players I want to remove
+```{r}
+hitters <- hitters %>% slice(-remove)
+model <-lm(sqrt(Salary)~AtBat+Hits+Walks+CWalks+Division+PutOuts, data=hitters)
+```
+Finally, we have to check the homoscedasticity of the model.
+```{r}
+plot(model, which=1)
+```
+The Residuals vs Fitted plot show that homoscedasity holds for the regression model.
+
+
+So our final model is 
+```{r}
+model <-lm(sqrt(Salary)~AtBat+Hits+Walks+CWalks+Division+PutOuts, data=hitters)
+```
+
+```{r}
+summary(model)
+```
+With an Adjusted R Squared of 0.5608 show that our model does a moderately good job at correctly predicted player salaries. The intercept is 8.8258, while our coefficients are -0.028, 0.163,0.018, 0.018, -1.525, and 0.005.
+
+
+Overall, we cleaned out the dataset by omitting null values, then preformed exploratory data analysis to try and find potential relationships within the data and get a better feel for the dataset. We then plotted the distribution of salaries and its relationship with othere variables to help visualize the salary variable. Then we created a regression model. First by finding the variables that had the strongest signifcance, then by checking the regression assumptions and modifying our model to ensure the assumptions are kept. One thing that seemed unusual while doing the project is the statistics for Mike Schmidt were incorrect, but the salary was correct causing him to be a massive outlier, it does call into question how accurate the rest of the dataset was.
