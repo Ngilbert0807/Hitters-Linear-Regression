@@ -122,4 +122,5 @@ summary(model)
 With an Adjusted R Squared of 0.5608 show that our model does a moderately good job at correctly predicted player salaries. The intercept is 8.8258, while our coefficients are -0.028, 0.163,0.018, 0.018, -1.525, and 0.005.
 
 
+
 Overall, we cleaned out the dataset by omitting null values, then preformed exploratory data analysis to try and find potential relationships within the data and get a better feel for the dataset. We then plotted the distribution of salaries and its relationship with othere variables to help visualize the salary variable. Then we created a regression model. First by finding the variables that had the strongest signifcance, then by checking the regression assumptions and modifying our model to ensure the assumptions are kept. One thing that seemed unusual while doing the project is the statistics for Mike Schmidt were incorrect, but the salary was correct causing him to be a massive outlier, it does call into question how accurate the rest of the dataset was.
